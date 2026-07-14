@@ -1,6 +1,7 @@
 package com.finkkk.sable_quota;
 
 import com.finkkk.sable_quota.command.SableQuotaCommands;
+import com.finkkk.sable_quota.localization.ServerTranslations;
 import com.finkkk.sable_quota.quota.QuotaCreationContext;
 import com.finkkk.sable_quota.quota.QuotaLifecycleObserver;
 import com.finkkk.sable_quota.quota.QuotaService;
@@ -84,7 +85,7 @@ public class SableQuota {
                 && arguments[2].equals("shatter"));
         if (createsMultipleStructures) {
             event.setCanceled(true);
-            player.sendSystemMessage(Component.translatable(COMMAND_CREATION_BLOCKED_MESSAGE)
+            player.sendSystemMessage(ServerTranslations.text(player, COMMAND_CREATION_BLOCKED_MESSAGE)
                     .withStyle(ChatFormatting.RED));
             return;
         }
@@ -135,7 +136,7 @@ public class SableQuota {
         int limit = status.limitInfo().limit();
         String configuredMessage = QuotaConfig.creationBlockedMessage();
         Component message = configuredMessage.isBlank()
-                ? Component.translatable(CREATION_BLOCKED_MESSAGE, owned, limit)
+                ? ServerTranslations.text(player, CREATION_BLOCKED_MESSAGE, owned, limit)
                 : Component.literal(configuredMessage
                         .replace("{owned}", Integer.toString(owned))
                         .replace("{limit}", Integer.toString(limit)));

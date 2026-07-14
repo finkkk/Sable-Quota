@@ -8,6 +8,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.finkkk.sable_quota.QuotaConfig;
 import com.finkkk.sable_quota.SableQuota;
+import com.finkkk.sable_quota.localization.ServerTranslations;
 import com.finkkk.sable_quota.quota.QuotaService;
 import com.finkkk.sable_quota.quota.StructureLocationService;
 import net.minecraft.commands.CommandSourceStack;
@@ -24,9 +25,6 @@ import java.util.UUID;
 public final class SableQuotaCommands {
 
     private static final int STRUCTURES_PER_PAGE = 10;
-    private static final SimpleCommandExceptionType ERROR_SINGLE_PLAYER = new SimpleCommandExceptionType(
-            Component.translatable("command.sable_quota.single_player_required"));
-
     private SableQuotaCommands() {
     }
 
@@ -73,7 +71,8 @@ public final class SableQuotaCommands {
             throws CommandSyntaxException {
         Collection<GameProfile> profiles = GameProfileArgument.getGameProfiles(context, "player");
         if (profiles.size() != 1) {
-            throw ERROR_SINGLE_PLAYER.create();
+            throw new SimpleCommandExceptionType(ServerTranslations.text(
+                    context.getSource(), "command.sable_quota.single_player_required")).create();
         }
         return profiles.iterator().next();
     }
@@ -81,7 +80,7 @@ public final class SableQuotaCommands {
     private static int sendQuota(GameProfile target, CommandSourceStack source) {
         QuotaService.QuotaStatus status = QuotaService.getStatus(source.getServer(), target);
         QuotaService.LimitInfo limitInfo = status.limitInfo();
-        Component limitSource = Component.translatable(switch (limitInfo.source()) {
+        Component limitSource = ServerTranslations.text(source, switch (limitInfo.source()) {
             case PLAYER_OVERRIDE -> "command.sable_quota.source.player_override";
             case OPERATOR_DEFAULT -> "command.sable_quota.source.operator_default";
             case PLAYER_DEFAULT -> "command.sable_quota.source.player_default";
@@ -89,9 +88,9 @@ public final class SableQuotaCommands {
         Component targetName = profileDisplayName(target);
 
         source.sendSuccess(() -> limitInfo.limit() < 0
-                ? Component.translatable("command.sable_quota.get_unlimited",
+                ? ServerTranslations.text(source, "command.sable_quota.get_unlimited",
                         targetName, status.owned(), limitSource)
-                : Component.translatable("command.sable_quota.get",
+                : ServerTranslations.text(source, "command.sable_quota.get",
                         targetName, status.owned(), limitInfo.limit(), limitSource), false);
         return status.owned();
     }
@@ -105,8 +104,10 @@ public final class SableQuotaCommands {
         int owned = QuotaService.getOwnedCount(server, target.getId());
         Component targetName = profileDisplayName(target);
         context.getSource().sendSuccess(() -> amount < 0
-                ? Component.translatable("command.sable_quota.set_unlimited", targetName, owned)
-                : Component.translatable("command.sable_quota.set", targetName, amount, owned), true);
+                ? ServerTranslations.text(context.getSource(),
+                        "command.sable_quota.set_unlimited", targetName, owned)
+                : ServerTranslations.text(context.getSource(),
+                        "command.sable_quota.set", targetName, amount, owned), true);
         return Command.SINGLE_SUCCESS;
     }
 
@@ -117,7 +118,7 @@ public final class SableQuotaCommands {
         QuotaService.LimitInfo effectiveLimit = QuotaService.getLimitInfo(server, target);
         Component targetName = profileDisplayName(target);
 
-        context.getSource().sendSuccess(() -> Component.translatable(
+        context.getSource().sendSuccess(() -> ServerTranslations.text(context.getSource(),
                 removed ? "command.sable_quota.reset" : "command.sable_quota.reset_no_override",
                 targetName, formatLimit(effectiveLimit.limit())), true);
         return Command.SINGLE_SUCCESS;
@@ -129,14 +130,14 @@ public final class SableQuotaCommands {
         Component targetName = profileDisplayName(target);
 
         if (structureIds.isEmpty()) {
-            source.sendSuccess(() -> Component.translatable(
+            source.sendSuccess(() -> ServerTranslations.text(source,
                     "command.sable_quota.list_empty", targetName), false);
             return 0;
         }
 
         int pageCount = (structureIds.size() + STRUCTURES_PER_PAGE - 1) / STRUCTURES_PER_PAGE;
         if (page > pageCount) {
-            source.sendFailure(Component.translatable(
+            source.sendFailure(ServerTranslations.text(source,
                     "command.sable_quota.list_invalid_page", page, pageCount));
             return 0;
         }
@@ -144,12 +145,12 @@ public final class SableQuotaCommands {
         int fromIndex = (page - 1) * STRUCTURES_PER_PAGE;
         int toIndex = Math.min(fromIndex + STRUCTURES_PER_PAGE, structureIds.size());
         List<UUID> pageStructures = structureIds.subList(fromIndex, toIndex);
-        source.sendSuccess(() -> Component.translatable(
+        source.sendSuccess(() -> ServerTranslations.text(source,
                 "command.sable_quota.list_header", targetName, structureIds.size(), page, pageCount), false);
         for (UUID structureId : pageStructures) {
             var located = StructureLocationService.locate(server, structureId);
             if (located.isEmpty()) {
-                source.sendSuccess(() -> Component.translatable(
+                source.sendSuccess(() -> ServerTranslations.text(source,
                         "command.sable_quota.list_unknown", structureId.toString()), false);
                 continue;
             }
@@ -164,7 +165,7 @@ public final class SableQuotaCommands {
                 ? "command.sable_quota.list_loaded"
                 : "command.sable_quota.list_unloaded";
         var blockPos = structure.blockPos();
-        source.sendSuccess(() -> Component.translatable(translationKey,
+        source.sendSuccess(() -> ServerTranslations.text(source, translationKey,
                 structure.structureId().toString(), structure.dimension().toString(),
                 blockPos.getX(), blockPos.getY(), blockPos.getZ()), false);
     }
@@ -172,14 +173,14 @@ public final class SableQuotaCommands {
     private static int reloadConfig(CommandContext<CommandSourceStack> context) {
         try {
             QuotaConfig.reloadFromDisk();
-            context.getSource().sendSuccess(() -> Component.translatable(
+            context.getSource().sendSuccess(() -> ServerTranslations.text(context.getSource(),
                     "command.sable_quota.reload_success",
                     formatLimit(QuotaConfig.defaultPlayerLimit()),
                     formatLimit(QuotaConfig.defaultOperatorLimit())), true);
             return Command.SINGLE_SUCCESS;
         } catch (Exception exception) {
             SableQuota.LOGGER.warn("Failed to reload Sable Quota config", exception);
-            context.getSource().sendFailure(Component.translatable(
+            context.getSource().sendFailure(ServerTranslations.text(context.getSource(),
                     "command.sable_quota.reload_failed", safeMessage(exception)));
             return 0;
         }
