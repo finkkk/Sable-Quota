@@ -1,0 +1,22 @@
+{
+  "message.sable_quota.creation_blocked": "You have reached your maximum number of physical structures (%s/%s).",
+  "message.sable_quota.command_creation_blocked": "The quota system does not allow players to run Sable commands that may create multiple structures at once.",
+  "command.sable_quota.get": "%s currently owns %s/%s physical structures (limit source: %s).",
+  "command.sable_quota.get_unlimited": "%s currently owns %s physical structures with no limit (limit source: %s).",
+  "command.sable_quota.list_header": "%s's recorded physical structures (%s, page %s/%s):",
+  "command.sable_quota.list_empty": "%s has no recorded physical structures.",
+  "command.sable_quota.list_invalid_page": "Page %s does not exist; the last page is %s.",
+  "command.sable_quota.list_loaded": "- %s: dimension %s, position [%s, %s, %s] (currently loaded)",
+  "command.sable_quota.list_unloaded": "- %s: dimension %s, position [%s, %s, %s] (unloaded, last known position)",
+  "command.sable_quota.list_unknown": "- %s: no position is available yet; it will be captured when the structure loads.",
+  "command.sable_quota.source.player_override": "player override",
+  "command.sable_quota.source.operator_default": "operator default",
+  "command.sable_quota.source.player_default": "regular-player default",
+  "command.sable_quota.set": "Set %s's personal structure limit to %s; they currently own %s. Existing structures were not removed.",
+  "command.sable_quota.set_unlimited": "Set %s's personal structure limit to unlimited; they currently own %s.",
+  "command.sable_quota.reset": "Cleared %s's personal limit; their current role default is %s.",
+  "command.sable_quota.reset_no_override": "%s has no personal limit override; their current role default is %s.",
+  "command.sable_quota.reload_success": "Reloaded Sable Quota config: regular players=%s, operators=%s.",
+  "command.sable_quota.reload_failed": "Failed to reload Sable Quota config; the previous settings remain active: %s",
+  "command.sable_quota.single_player_required": "This command requires exactly one player."
+}

@@ -1,0 +1,49 @@
+modLoader="javafml" #mandatory
+loaderVersion="${loader_version_range}" #mandatory
+license="${mod_license}"
+
+[[mods]] #mandatory
+modId="${mod_id}" #mandatory
+version="${mod_version}" #mandatory
+displayName="${mod_name}" #mandatory
+authors="finkkk"
+description='''
+Sable Quota introduces per-player structure quotas for Sable.
+Limit the maximum number of physical structures each player can create and prevent excessive world resource usage.
+Provides server-friendly control over Sable structure creation with configurable limits and feedback messages.
+
+Sable Quota 为 Sable 添加基于玩家的物理结构配额限制系统。
+限制每位玩家可创建的最大物理结构数量，避免服务器资源过度占用。
+提供可配置的结构创建上限，并在达到限制时给予玩家提示。
+'''
+
+[[mixins]]
+config="${mod_id}.mixins.json"
+
+[[dependencies.${mod_id}]] #optional
+
+    modId="neoforge" #mandatory
+    type="required" #mandatory
+    versionRange="[21.1.233,)" #mandatory
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="sable"
+    type="required"
+    versionRange="[2.0.3,)"
+    ordering="AFTER"
+    side="BOTH"
+
+# Features are specific properties of the game environment, that you may want to declare you require. This example declares
+# that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't
+# stop your mod loading on the server for example.
+#[features.${mod_id}]
+#openGLVersion="[3.2,)"

@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "minVersion": "0.8.7",
+  "package": "com.finkkk.sable_quota.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "SableServerSubLevelMixin",
+    "SimulatedAssemblePacketMixin",
+    "SimulatedPhysicsAssemblerMixin",
+    "SimulatedSwivelBearingMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
