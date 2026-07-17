@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.IllegalFormatException;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 在服务端解析本模组的语言文本。
@@ -31,6 +33,8 @@ public final class ServerTranslations {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Map<String, String> EN_US = load("en_us");
     private static final Map<String, String> ZH_CN = load("zh_cn");
+    private static final Set<String> REPORTED_MISSING_KEYS = ConcurrentHashMap.newKeySet();
+    private static final Set<String> REPORTED_INVALID_FORMATS = ConcurrentHashMap.newKeySet();
 
     private ServerTranslations() {
     }
@@ -49,30 +53,41 @@ public final class ServerTranslations {
     private static MutableComponent textForLanguage(String language, String key, Object... arguments) {
         Map<String, String> translations = isChinese(language) ? ZH_CN : EN_US;
         String pattern = translations.get(key);
+        if (pattern == null && translations != EN_US) {
+            pattern = EN_US.get(key);
+        }
         if (pattern == null) {
             // 语言资源损坏也不能影响命令执行，更不能把内部翻译键直接丢给玩家。
-            LOGGER.warn("Missing server-side translation: {}", key);
+            if (REPORTED_MISSING_KEYS.add(key)) {
+                LOGGER.warn("Missing server-side translation: {}", key);
+            }
             return Component.literal("Sable Quota: " + joinArguments(arguments));
         }
 
-        Object[] plainArguments = new Object[arguments.length];
+        // Action Bar 的常见参数只有数字和字符串；仅在真的遇到 Component 时才复制数组。
+        Object[] plainArguments = arguments;
         for (int index = 0; index < arguments.length; index++) {
             Object argument = arguments[index];
-            plainArguments[index] = argument instanceof Component component
-                    ? component.getString()
-                    : argument;
+            if (argument instanceof Component component) {
+                if (plainArguments == arguments) {
+                    plainArguments = arguments.clone();
+                }
+                plainArguments[index] = component.getString();
+            }
         }
 
         try {
             return Component.literal(String.format(Locale.ROOT, pattern, plainArguments));
         } catch (IllegalFormatException exception) {
-            LOGGER.error("Invalid server-side translation format for key {}", key, exception);
+            if (REPORTED_INVALID_FORMATS.add(key)) {
+                LOGGER.error("Invalid server-side translation format for key {}", key, exception);
+            }
             return Component.literal(pattern + " " + joinArguments(plainArguments));
         }
     }
 
     private static boolean isChinese(String language) {
-        return language != null && language.toLowerCase(Locale.ROOT).startsWith("zh_");
+        return language != null && language.regionMatches(true, 0, "zh_", 0, 3);
     }
 
     private static String joinArguments(Object[] arguments) {

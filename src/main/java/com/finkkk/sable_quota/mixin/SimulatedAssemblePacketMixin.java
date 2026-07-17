@@ -1,6 +1,7 @@
 package com.finkkk.sable_quota.mixin;
 
 import com.finkkk.sable_quota.SableQuota;
+import com.finkkk.sable_quota.localization.QuotaFeedback;
 import com.finkkk.sable_quota.quota.QuotaCreationContext;
 import com.finkkk.sable_quota.quota.QuotaService;
 import dev.ryanhcode.sable.Sable;
@@ -21,7 +22,7 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** Sends feedback to the player whose physics-assembler request was denied. */
+/** 在 Simulated 装配请求进入服务端处理时建立玩家归属上下文。 */
 @Pseudo
 @Mixin(targets = "dev.simulated_team.simulated.network.packets.AssemblePacket", remap = false)
 public abstract class SimulatedAssemblePacketMixin {
@@ -48,7 +49,7 @@ public abstract class SimulatedAssemblePacketMixin {
     @Shadow(remap = false)
     public abstract BlockPos pos();
 
-    @Dynamic("Method belongs to the optional Simulated mod and is not on the compile classpath")
+    @Dynamic("目标方法来自可选的 Simulated 模组")
     @Inject(method = "handle", at = @At("HEAD"), cancellable = true, remap = false)
     private void sableQuota$notifyPlayer(@Coerce Object context, CallbackInfo callback) {
         ServerPlayer player = getPlayer(context);
@@ -57,7 +58,7 @@ public abstract class SimulatedAssemblePacketMixin {
         }
 
         if (!QuotaService.tryBeginCreation(player)) {
-            SableQuota.sendCreationBlockedMessage(player);
+            QuotaFeedback.sendCreationBlocked(player);
             callback.cancel();
             return;
         }
@@ -65,7 +66,7 @@ public abstract class SimulatedAssemblePacketMixin {
         sableQuota$creationContextStarted = true;
     }
 
-    @Dynamic("Method belongs to the optional Simulated mod and is not on the compile classpath")
+    @Dynamic("目标方法来自可选的 Simulated 模组")
     @Inject(method = "handle", at = @At("RETURN"), remap = false)
     private void sableQuota$clearCreationContext(@Coerce Object context, CallbackInfo callback) {
         if (sableQuota$creationContextStarted) {

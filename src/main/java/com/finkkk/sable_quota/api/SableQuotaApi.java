@@ -1,6 +1,6 @@
 package com.finkkk.sable_quota.api;
 
-import com.finkkk.sable_quota.SableQuota;
+import com.finkkk.sable_quota.localization.QuotaFeedback;
 import com.finkkk.sable_quota.quota.QuotaCreationContext;
 import com.finkkk.sable_quota.quota.QuotaService;
 import net.minecraft.server.level.ServerPlayer;
@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-/** Public integration entry point for mods that create one Sable structure for a player. */
+/** 供第三方模组代表玩家创建单个 Sable 结构时使用的公开入口。 */
 public final class SableQuotaApi {
 
     private SableQuotaApi() {
@@ -33,19 +33,17 @@ public final class SableQuotaApi {
     }
 
     /**
-     * Checks quota, associates the next Sable allocation with {@code player},
-     * and always clears the temporary context afterward.
+     * 检查额度，将下一次 Sable 分配归属到 {@code player}，并在回调结束后清理临时上下文。
      *
-     * <p>The supplied action must create at most one new sub-level. An empty
-     * result means the quota check was denied or the callback returned null;
-     * denied players are notified.</p>
+     * <p>回调最多只能创建一个 Sub-Level。额度不足或回调返回 {@code null} 时返回空值；
+     * 额度不足时会同时向玩家发送提示。</p>
      */
     public static <T> Optional<T> createStructure(ServerPlayer player, Supplier<? extends T> creation) {
         Objects.requireNonNull(player, "player");
         Objects.requireNonNull(creation, "creation");
 
         if (!QuotaService.tryBeginCreation(player)) {
-            SableQuota.sendCreationBlockedMessage(player);
+            QuotaFeedback.sendCreationBlocked(player);
             return Optional.empty();
         }
 

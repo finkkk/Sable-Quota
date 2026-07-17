@@ -81,11 +81,13 @@ public final class QuotaCreationContext {
 
         private void remember(PendingKey key, UUID ownerId, long gameTime) {
             prune(gameTime);
-            if (expirations.size() >= MAX_PENDING_PER_SERVER) {
-                evictOldest();
+            // 已被消费的过期索引也会占队列空间；先按队列容量逐条清理，
+            // 避免只清掉陈旧索引后仍额外淘汰一条有效记录。
+            while (expirations.size() >= MAX_PENDING_PER_SERVER) {
+                removeIfCurrent(expirations.removeFirst());
             }
             if (!owners.containsKey(key) && owners.size() >= MAX_PENDING_PER_SERVER) {
-                evictOldest();
+                evictOldestOwner();
             }
 
             owners.put(key, new PendingOwner(ownerId, gameTime));
@@ -105,7 +107,7 @@ public final class QuotaCreationContext {
             }
         }
 
-        private void evictOldest() {
+        private void evictOldestOwner() {
             while (!expirations.isEmpty()) {
                 PendingExpiration oldest = expirations.removeFirst();
                 if (removeIfCurrent(oldest)) {

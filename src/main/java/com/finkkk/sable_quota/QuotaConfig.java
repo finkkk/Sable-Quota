@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 
+/** 定义 NeoForge 配置，并维护可原子替换的运行时配置快照。 */
 public final class QuotaConfig {
 
     private static final int DEFAULT_PLAYER_LIMIT_VALUE = 3;
@@ -31,18 +32,18 @@ public final class QuotaConfig {
         ModConfigSpec.Builder builder = new ModConfigSpec.Builder();
         builder.push("quota");
         DEFAULT_PLAYER_LIMIT = builder
-                .comment("Default maximum structures for regular players. -1 means unlimited.")
+                .comment("普通玩家默认物理结构上限；-1 表示无限。")
                 .defineInRange("maxStructuresPerPlayer", DEFAULT_PLAYER_LIMIT_VALUE, -1, Integer.MAX_VALUE);
         DEFAULT_OPERATOR_LIMIT = builder
-                .comment("Default maximum structures for server operators. -1 means unlimited.")
+                .comment("服务器管理员默认物理结构上限；-1 表示无限。")
                 .defineInRange("maxStructuresPerOperator", DEFAULT_OPERATOR_LIMIT_VALUE, -1, Integer.MAX_VALUE);
         builder.pop();
 
         builder.push("messages");
         CREATION_BLOCKED_MESSAGE = builder
                 .comment(
-                        "Custom quota-denied message. Supports {owned} and {limit} placeholders.",
-                        "Leave empty to use the localized message from the player's language."
+                        "自定义额度不足提示，支持 {owned} 和 {limit} 占位符。",
+                        "留空时按照玩家客户端语言使用内置文本。"
                 )
                 .define("creationBlocked", "");
         builder.pop();
@@ -70,6 +71,7 @@ public final class QuotaConfig {
         }
     }
 
+    /** 从磁盘校验并加载完整快照；任一字段无效时保留旧快照。 */
     public static void reloadFromDisk() throws IOException {
         ModConfig config = commonConfig;
         if (config == null) {

@@ -1,6 +1,6 @@
 package com.finkkk.sable_quota.mixin;
 
-import com.finkkk.sable_quota.SableQuota;
+import com.finkkk.sable_quota.localization.QuotaFeedback;
 import com.finkkk.sable_quota.quota.QuotaCreationContext;
 import com.finkkk.sable_quota.quota.QuotaService;
 import net.minecraft.server.level.ServerLevel;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.UUID;
 
-/** Stops all server-side swivel-bearing assembly, including automation. */
+/** 检查旋转轴承的延迟装配；无法确认发起玩家的自动化装配会被拒绝。 */
 @Pseudo
 @Mixin(targets = "dev.simulated_team.simulated.content.blocks.swivel_bearing.SwivelBearingBlockEntity", remap = false)
 public abstract class SimulatedSwivelBearingMixin {
@@ -24,7 +24,7 @@ public abstract class SimulatedSwivelBearingMixin {
     @Unique
     private boolean sableQuota$creationContextStarted;
 
-    @Dynamic("Method belongs to the optional Simulated mod and is not on the compile classpath")
+    @Dynamic("目标方法来自可选的 Simulated 模组")
     @Inject(method = "assemble", at = @At("HEAD"), cancellable = true, remap = false)
     private void sableQuota$blockAssembly(CallbackInfo callback) {
         BlockEntity bearing = (BlockEntity) (Object) this;
@@ -36,7 +36,7 @@ public abstract class SimulatedSwivelBearingMixin {
         if (ownerId == null || !QuotaService.tryBeginCreation(level.getServer(), ownerId)) {
             ServerPlayer player = ownerId == null ? null : level.getServer().getPlayerList().getPlayer(ownerId);
             if (player != null) {
-                SableQuota.sendCreationBlockedMessage(player);
+                QuotaFeedback.sendCreationBlocked(player);
             }
             callback.cancel();
             return;
@@ -45,7 +45,7 @@ public abstract class SimulatedSwivelBearingMixin {
         sableQuota$creationContextStarted = true;
     }
 
-    @Dynamic("Method belongs to the optional Simulated mod and is not on the compile classpath")
+    @Dynamic("目标方法来自可选的 Simulated 模组")
     @Inject(method = "assemble", at = @At("RETURN"), remap = false)
     private void sableQuota$clearCreationContext(CallbackInfo callback) {
         if (sableQuota$creationContextStarted) {

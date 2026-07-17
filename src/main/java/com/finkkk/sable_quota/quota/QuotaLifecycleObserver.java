@@ -1,6 +1,7 @@
 package com.finkkk.sable_quota.quota;
 
 import com.finkkk.sable_quota.SableQuota;
+import com.finkkk.sable_quota.localization.QuotaFeedback;
 import dev.ryanhcode.sable.api.sublevel.SubLevelObserver;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason;
@@ -32,6 +33,7 @@ public final class QuotaLifecycleObserver implements SubLevelObserver {
             data.updateStructureLocation(subLevel.getUniqueId(), level.dimension(),
                     position.x(), position.y(), position.z());
             SableQuota.LOGGER.debug("Assigned Sable structure {} to player {}", subLevel.getUniqueId(), ownerId);
+            QuotaFeedback.sendProgress(level.getServer(), ownerId);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.finkkk.sable_quota.quota;
 
-import com.mojang.authlib.GameProfile;
 import com.finkkk.sable_quota.QuotaConfig;
+import com.mojang.authlib.GameProfile;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -43,6 +43,12 @@ public final class QuotaService {
 
     public static int getOwnedCount(MinecraftServer server, UUID playerId) {
         return QuotaSavedData.get(server).countOwnedBy(playerId);
+    }
+
+    /** 一次读取同一份 SavedData，供 Action Bar 等只需要数量与上限的场景使用。 */
+    public static QuotaUsage getUsage(MinecraftServer server, UUID playerId) {
+        QuotaSavedData data = QuotaSavedData.get(server);
+        return new QuotaUsage(data.countOwnedBy(playerId), getLimit(server, playerId, data));
     }
 
     public static QuotaStatus getStatus(ServerPlayer player) {
@@ -101,7 +107,7 @@ public final class QuotaService {
         return QuotaSavedData.get(server).clearPlayerLimitOverride(playerId);
     }
 
-    /** Returns the regular-player default for integrations without a player context. */
+    /** 返回缺少玩家上下文时供第三方集成使用的普通玩家默认上限。 */
     public static int getLimit() {
         return QuotaConfig.defaultPlayerLimit();
     }
@@ -110,6 +116,9 @@ public final class QuotaService {
     }
 
     public record QuotaStatus(int owned, LimitInfo limitInfo) {
+    }
+
+    public record QuotaUsage(int owned, int limit) {
     }
 
     public enum LimitSource {

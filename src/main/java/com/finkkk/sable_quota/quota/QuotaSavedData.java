@@ -29,6 +29,8 @@ public final class QuotaSavedData extends SavedData {
     private static final String STRUCTURE_OWNERS_TAG = "StructureOwners";
     private static final String PLAYER_LIMIT_OVERRIDES_TAG = "PlayerLimitOverrides";
     private static final String STRUCTURE_LOCATIONS_TAG = "StructureLocations";
+    private static final Factory<QuotaSavedData> FACTORY =
+            new Factory<>(QuotaSavedData::new, QuotaSavedData::load, DataFixTypes.LEVEL);
 
     private final Map<UUID, UUID> structureOwners = new HashMap<>();
     private final Map<UUID, Set<UUID>> ownerStructures = new HashMap<>();
@@ -37,9 +39,7 @@ public final class QuotaSavedData extends SavedData {
 
     public static QuotaSavedData get(MinecraftServer server) {
         return server.overworld().getDataStorage().computeIfAbsent(
-                new Factory<>(QuotaSavedData::new, QuotaSavedData::load, DataFixTypes.LEVEL),
-                FILE_ID
-        );
+                FACTORY, FILE_ID);
     }
 
     private static QuotaSavedData load(CompoundTag root, HolderLookup.Provider registries) {
@@ -137,6 +137,10 @@ public final class QuotaSavedData extends SavedData {
         return structures == null ? 0 : structures.size();
     }
 
+    public UUID getStructureOwner(UUID structureId) {
+        return structureOwners.get(structureId);
+    }
+
     public List<UUID> getStructuresOwnedBy(UUID playerId) {
         Set<UUID> structures = ownerStructures.get(playerId);
         return structures == null ? List.of() : List.copyOf(structures);
@@ -153,7 +157,8 @@ public final class QuotaSavedData extends SavedData {
             return;
         }
         StructureLocation location = new StructureLocation(dimension.location(), x, y, z);
-        if (!location.equals(structureLocations.put(structureId, location))) {
+        if (!location.equals(structureLocations.get(structureId))) {
+            structureLocations.put(structureId, location);
             setDirty();
         }
     }
@@ -189,19 +194,26 @@ public final class QuotaSavedData extends SavedData {
         return false;
     }
 
-    /** Copies ownership when Sable splits a new physical structure from an existing one. */
-    public boolean inheritStructure(UUID structureId, UUID sourceStructureId) {
+    /**
+     * 复制来源结构的所有权。
+     *
+     * @return 登记成功时返回所有者 UUID；来源无归属或目标已登记时返回 {@code null}
+     */
+    public UUID inheritStructure(UUID structureId, UUID sourceStructureId) {
         UUID sourceOwner = structureOwners.get(sourceStructureId);
-        return sourceOwner != null && addStructure(structureId, sourceOwner);
+        return sourceOwner != null && addStructure(structureId, sourceOwner) ? sourceOwner : null;
     }
 
     public UUID removeStructure(UUID structureId) {
         UUID ownerId = structureOwners.remove(structureId);
         if (ownerId != null) {
-            ownerStructures.computeIfPresent(ownerId, (ignored, structures) -> {
+            Set<UUID> structures = ownerStructures.get(ownerId);
+            if (structures != null) {
                 structures.remove(structureId);
-                return structures.isEmpty() ? null : structures;
-            });
+                if (structures.isEmpty()) {
+                    ownerStructures.remove(ownerId);
+                }
+            }
             structureLocations.remove(structureId);
             setDirty();
         }

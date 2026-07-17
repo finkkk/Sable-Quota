@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+/** 注册并实现查询、定位与管理玩家结构额度的服务端指令。 */
 public final class SableQuotaCommands {
 
     private static final int STRUCTURES_PER_PAGE = 10;
@@ -58,6 +59,16 @@ public final class SableQuotaCommands {
                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(-1))
                                         .executes(SableQuotaCommands::setQuota))))
+                .then(Commands.literal("add")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                        .executes(context -> adjustQuota(context, LimitAdjustment.ADD)))))
+                .then(Commands.literal("remove")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                        .executes(context -> adjustQuota(context, LimitAdjustment.REMOVE)))))
                 .then(Commands.literal("reset")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
@@ -92,7 +103,7 @@ public final class SableQuotaCommands {
                         targetName, status.owned(), limitSource)
                 : ServerTranslations.text(source, "command.sable_quota.get",
                         targetName, status.owned(), limitInfo.limit(), limitSource), false);
-        return status.owned();
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int setQuota(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
@@ -124,6 +135,30 @@ public final class SableQuotaCommands {
         return Command.SINGLE_SUCCESS;
     }
 
+    private static int adjustQuota(CommandContext<CommandSourceStack> context, LimitAdjustment adjustment)
+            throws CommandSyntaxException {
+        GameProfile target = getSingleProfile(context);
+        int amount = IntegerArgumentType.getInteger(context, "amount");
+        MinecraftServer server = context.getSource().getServer();
+        int currentLimit = QuotaService.getLimitInfo(server, target).limit();
+        Component targetName = profileDisplayName(target);
+
+        if (currentLimit < 0) {
+            context.getSource().sendFailure(ServerTranslations.text(context.getSource(),
+                    "command.sable_quota.adjust_unlimited", targetName));
+            return 0;
+        }
+
+        long adjustedLimit = (long) currentLimit + (long) adjustment.direction() * amount;
+        int newLimit = (int) Math.max(0L, Math.min(Integer.MAX_VALUE, adjustedLimit));
+        QuotaService.setPlayerLimit(server, target.getId(), newLimit);
+
+        context.getSource().sendSuccess(() -> ServerTranslations.text(context.getSource(),
+                adjustment.translationKey(),
+                targetName, currentLimit, newLimit), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
     private static int listStructures(GameProfile target, CommandSourceStack source, int page) {
         MinecraftServer server = source.getServer();
         List<UUID> structureIds = StructureLocationService.getOwnedStructureIds(server, target.getId());
@@ -132,7 +167,7 @@ public final class SableQuotaCommands {
         if (structureIds.isEmpty()) {
             source.sendSuccess(() -> ServerTranslations.text(source,
                     "command.sable_quota.list_empty", targetName), false);
-            return 0;
+            return Command.SINGLE_SUCCESS;
         }
 
         int pageCount = (structureIds.size() + STRUCTURES_PER_PAGE - 1) / STRUCTURES_PER_PAGE;
@@ -198,5 +233,27 @@ public final class SableQuotaCommands {
     private static Component profileDisplayName(GameProfile profile) {
         String name = profile.getName();
         return Component.literal(name == null || name.isBlank() ? profile.getId().toString() : name);
+    }
+
+    /** 用方向值统一增减逻辑，避免两套边界与溢出处理产生差异。 */
+    private enum LimitAdjustment {
+        ADD(1, "command.sable_quota.add"),
+        REMOVE(-1, "command.sable_quota.remove");
+
+        private final int direction;
+        private final String translationKey;
+
+        LimitAdjustment(int direction, String translationKey) {
+            this.direction = direction;
+            this.translationKey = translationKey;
+        }
+
+        private int direction() {
+            return direction;
+        }
+
+        private String translationKey() {
+            return translationKey;
+        }
     }
 }

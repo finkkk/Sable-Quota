@@ -1,5 +1,7 @@
 {
   "message.sable_quota.creation_blocked": "你已达到最大物理结构数量限制（%s/%s）！",
+  "message.sable_quota.split_blocked": "该操作会使物理结构断裂并超过其所有者的结构数量限制（%s/%s）！",
+  "message.sable_quota.progress": "物理结构数量：%s/%s",
   "message.sable_quota.command_creation_blocked": "配额系统暂不允许玩家执行可能一次创建多个结构的 Sable 指令。",
   "command.sable_quota.get": "%s 当前拥有 %s/%s 个物理结构（额度来源：%s）。",
   "command.sable_quota.get_unlimited": "%s 当前拥有 %s 个物理结构，上限无限（额度来源：%s）。",
@@ -14,6 +16,9 @@
   "command.sable_quota.source.player_default": "普通玩家默认值",
   "command.sable_quota.set": "已将 %s 的个人结构上限设为 %s；当前拥有 %s 个，现有结构不会被删除。",
   "command.sable_quota.set_unlimited": "已将 %s 的个人结构上限设为无限；当前拥有 %s 个。",
+  "command.sable_quota.add": "已增加 %s 的个人结构上限：%s → %s。",
+  "command.sable_quota.remove": "已减少 %s 的个人结构上限：%s → %s。",
+  "command.sable_quota.adjust_unlimited": "%s 当前的结构上限为无限，请先使用 set 指令设置有限值。",
   "command.sable_quota.reset": "已清除 %s 的个人上限；当前按身份默认值 %s 计算。",
   "command.sable_quota.reset_no_override": "%s 没有个人上限设置；当前按身份默认值 %s 计算。",
   "command.sable_quota.reload_success": "Sable Quota 配置已重新加载：普通玩家=%s，管理员=%s。",
