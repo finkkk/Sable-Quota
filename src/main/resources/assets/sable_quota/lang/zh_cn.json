@@ -23,5 +23,11 @@
   "command.sable_quota.reset_no_override": "%s 没有个人上限设置；当前按身份默认值 %s 计算。",
   "command.sable_quota.reload_success": "Sable Quota 配置已重新加载：普通玩家=%s，管理员=%s。",
   "command.sable_quota.reload_failed": "Sable Quota 配置重新加载失败，旧配置继续生效：%s",
+  "command.sable_quota.delete_success_loaded": "已彻底删除 Sable 结构 %s（维度 %s，删除前已加载），包括实体、plot、强制加载票据、磁盘数据和配额记录。",
+  "command.sable_quota.delete_success_unloaded": "已加载并彻底删除 Sable 结构 %s（维度 %s），包括实体、plot、强制加载票据、磁盘数据和配额记录。",
+  "command.sable_quota.delete_invalid_uuid": "%s 不是有效的结构 UUID。",
+  "command.sable_quota.delete_not_found": "所有维度中都没有找到 UUID 为 %s 的已加载或已保存 Sable 结构；配额记录未被修改。",
+  "command.sable_quota.delete_load_failed": "已找到 Sable 结构 %s（维度 %s），但 Sable 无法安全加载它以执行删除。请检查服务端日志；没有直接修改存储文件。",
+  "command.sable_quota.delete_failed": "删除 Sable 结构 %s 失败：%s",
   "command.sable_quota.single_player_required": "该指令必须且只能指定一名玩家。"
 }

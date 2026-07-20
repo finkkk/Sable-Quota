@@ -19,6 +19,9 @@ Sable Quota 为 Sable 添加基于玩家的物理结构配额限制系统。
 [[mixins]]
 config="${mod_id}.mixins.json"
 
+[[mixins]]
+config="${mod_id}.compat.mixins.json"
+
 [[dependencies.${mod_id}]]
 
     modId="neoforge"

@@ -23,5 +23,11 @@
   "command.sable_quota.reset_no_override": "%s has no personal limit override; their current role default is %s.",
   "command.sable_quota.reload_success": "Reloaded Sable Quota config: regular players=%s, operators=%s.",
   "command.sable_quota.reload_failed": "Failed to reload Sable Quota config; the previous settings remain active: %s",
+  "command.sable_quota.delete_success_loaded": "Deleted loaded Sable structure %s from dimension %s, including its entities, plot, tickets, storage data, and quota record.",
+  "command.sable_quota.delete_success_unloaded": "Loaded and permanently deleted Sable structure %s from dimension %s, including its entities, plot, tickets, storage data, and quota record.",
+  "command.sable_quota.delete_invalid_uuid": "%s is not a valid structure UUID.",
+  "command.sable_quota.delete_not_found": "No loaded or stored Sable structure with UUID %s was found in any dimension; no quota record was changed.",
+  "command.sable_quota.delete_load_failed": "Found Sable structure %s in dimension %s, but Sable could not load it safely for deletion. Check the server log; no direct storage deletion was attempted.",
+  "command.sable_quota.delete_failed": "Failed to delete Sable structure %s: %s",
   "command.sable_quota.single_player_required": "This command requires exactly one player."
 }

@@ -3,6 +3,7 @@ package com.finkkk.sable_quota.command;
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
@@ -10,6 +11,7 @@ import com.finkkk.sable_quota.QuotaConfig;
 import com.finkkk.sable_quota.SableQuota;
 import com.finkkk.sable_quota.localization.ServerTranslations;
 import com.finkkk.sable_quota.quota.QuotaService;
+import com.finkkk.sable_quota.quota.StructureDeletionService;
 import com.finkkk.sable_quota.quota.StructureLocationService;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -73,6 +75,10 @@ public final class SableQuotaCommands {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                 .executes(SableQuotaCommands::resetQuota)))
+                .then(Commands.literal("delete")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.argument("structure_id", StringArgumentType.word())
+                                .executes(SableQuotaCommands::deleteStructure)))
                 .then(Commands.literal("reload")
                         .requires(source -> source.hasPermission(2))
                         .executes(SableQuotaCommands::reloadConfig)));
@@ -217,6 +223,50 @@ public final class SableQuotaCommands {
             SableQuota.LOGGER.warn("Failed to reload Sable Quota config", exception);
             context.getSource().sendFailure(ServerTranslations.text(context.getSource(),
                     "command.sable_quota.reload_failed", safeMessage(exception)));
+            return 0;
+        }
+    }
+
+    private static int deleteStructure(CommandContext<CommandSourceStack> context) {
+        CommandSourceStack source = context.getSource();
+        String input = StringArgumentType.getString(context, "structure_id");
+        UUID structureId;
+        try {
+            structureId = UUID.fromString(input);
+        } catch (IllegalArgumentException exception) {
+            source.sendFailure(ServerTranslations.text(source,
+                    "command.sable_quota.delete_invalid_uuid", input));
+            return 0;
+        }
+
+        try {
+            StructureDeletionService.DeleteResult result =
+                    StructureDeletionService.delete(source.getServer(), structureId);
+            return switch (result.status()) {
+                case DELETED -> {
+                    source.sendSuccess(() -> ServerTranslations.text(source,
+                            result.initiallyLoaded()
+                                    ? "command.sable_quota.delete_success_loaded"
+                                    : "command.sable_quota.delete_success_unloaded",
+                            structureId.toString(), result.dimension().toString()), true);
+                    yield Command.SINGLE_SUCCESS;
+                }
+                case NOT_FOUND -> {
+                    source.sendFailure(ServerTranslations.text(source,
+                            "command.sable_quota.delete_not_found", structureId.toString()));
+                    yield 0;
+                }
+                case LOAD_FAILED -> {
+                    source.sendFailure(ServerTranslations.text(source,
+                            "command.sable_quota.delete_load_failed",
+                            structureId.toString(), result.dimension().toString()));
+                    yield 0;
+                }
+            };
+        } catch (RuntimeException exception) {
+            SableQuota.LOGGER.error("Failed to delete Sable structure {}", structureId, exception);
+            source.sendFailure(ServerTranslations.text(source,
+                    "command.sable_quota.delete_failed", structureId.toString(), safeMessage(exception)));
             return 0;
         }
     }

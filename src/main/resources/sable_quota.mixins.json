@@ -5,10 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "SableServerSubLevelMixin",
-    "SubLevelHeatMapManagerMixin",
-    "SimulatedAssemblePacketMixin",
-    "SimulatedPhysicsAssemblerMixin",
-    "SimulatedSwivelBearingMixin"
+    "SubLevelHeatMapManagerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
